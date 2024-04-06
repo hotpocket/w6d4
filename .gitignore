@@ -1,7 +1,5 @@
 # BDL - custom/per_project stuff
-my.db
-test.sqlite
-test.sqlite3
+user_database.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
