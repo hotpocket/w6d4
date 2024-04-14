@@ -26,9 +26,18 @@ class DbUser:
     '''Insert a new user into the database. Return the id of the new user.'''
     def insert(self, name, email, password, age=None, gender=None, address=None):
         sql = 'INSERT INTO user (name, email, password, age, gender, address) VALUES (?, ?, ?, ?, ?, ?)'
-        self.cursor.execute(sql, (name, email, password, age, gender, address))
-        self.conn.commit()
-        return {"id": self.cursor.lastrowid}
+        try:
+            self.cursor.execute(sql, (name, email, password, age, gender, address))
+            self.conn.commit()
+            return {"id": self.cursor.lastrowid}
+        except sqlite3.OperationalError as e:
+            return f"Operational Error: {e}" # the query may not be valid sqlite syntax
+        except sqlite3.IntegrityError as e:
+            return f"Record Exists: {e}"
+        except sqlite3.DatabaseError as e:
+            return f"Unknown Database Error: {e}"
+        except Exception as e:
+            return f"Unknown Error: {e}"
 
     '''Select users from the database based on the given criteria. Return a list of dictionaries.'''
     def select(self, min_age=None, max_age=None, gender=None):
@@ -48,15 +57,15 @@ class DbUser:
 
     '''Update user information in the database. Return the number of rows affected.'''
     def update(self, email, age=None, gender=None, address=None):
-        fields = [age, gender, address]
-        if all(f is None for f in fields):
+        # len of field_values must match len of field_names
+        field_values = [age, gender, address]
+        field_names = ['age', 'gender', 'address']
+        if all(f is None for f in field_values):
             return 0
         sql = 'UPDATE user SET '
-        updateThese = [f for f in fields if f is not None]
-        sql += ', '.join([f'{k} = ?' for k in ['age', 'gender', 'address'] if fields.pop(0) is not None])
+        updateThese = [f for f in field_values if f is not None]
+        sql += ', '.join([f'{k} = ?' for k in field_names if field_values.pop(0) is not None])
         sql += ' WHERE email = ?'
-        # print(sql)
-        # print(updateThese + [email])
         affected_rows = self.cursor.execute(sql, updateThese + [email])
         self.conn.commit()
         return f"Updated {affected_rows.rowcount} row(s) for email: {email}"
