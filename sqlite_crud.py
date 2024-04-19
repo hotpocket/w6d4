@@ -66,7 +66,7 @@ class DbUser:
             return 0
         sql = 'UPDATE user SET '
         updateThese = [f for f in field_values if f is not None]
-        setList += ', '.join([f'{k} = ?' for k in field_names if field_values.pop(0) is not None])
+        setList = ', '.join([f'{k} = ?' for k in field_names if field_values.pop(0) is not None])
         if setList == '':
             return 0
         sql += setList + ' WHERE email = ?'
