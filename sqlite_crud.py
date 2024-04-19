@@ -49,6 +49,8 @@ class DbUser:
             if field is not None:
                 where += ' WHERE ' if where == '' else ' AND '
                 where += filter
+            else:
+                fields.remove(field)
         sql += where
         # print(sql)
         self.cursor.execute(sql, fields)
@@ -64,8 +66,10 @@ class DbUser:
             return 0
         sql = 'UPDATE user SET '
         updateThese = [f for f in field_values if f is not None]
-        sql += ', '.join([f'{k} = ?' for k in field_names if field_values.pop(0) is not None])
-        sql += ' WHERE email = ?'
+        setList += ', '.join([f'{k} = ?' for k in field_names if field_values.pop(0) is not None])
+        if setList == '':
+            return 0
+        sql += setList + ' WHERE email = ?'
         affected_rows = self.cursor.execute(sql, updateThese + [email])
         self.conn.commit()
         return f"Updated {affected_rows.rowcount} row(s) for email: {email}"
